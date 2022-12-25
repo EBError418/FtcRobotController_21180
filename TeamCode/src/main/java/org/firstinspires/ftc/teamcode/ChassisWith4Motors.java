@@ -618,6 +618,32 @@ public class ChassisWith4Motors {
                     BackLeftDrive.getCurrentPosition(), BackRightDrive.getCurrentPosition());
         }
     }
+    public void runToJunction(double EncoderRange, double DSrange, double Sensor) {
+        runUsingEncoders();
+        double driveDirection = Math.copySign(1, EncoderRange);
+
+        EncoderRange = Math.abs(EncoderRange);
+        double currEnDist = 0.0;
+
+        // controlled by encoders
+        while(EncoderRange - currEnDist > 0) {
+            drivingWithPID(-SHORT_DISTANCE_POWER * driveDirection, 0.0, 0.0, true);
+            currEnDist = Math.abs(getEncoderDistance());
+        }
+
+        // controlled by distance sensor
+        double currDS = getFcDSValue();
+        Logging.log(" curEnrDis = %.2f, Curr Sensor dist = %.2f",
+                Math.abs(getEncoderDistance()), getFcDSValue());
+        while(getFcDSValue() > 20) {
+            drivingWithPID(-SHORT_DISTANCE_POWER * driveDirection, 0.0, 0.0, true);
+        }
+        while(getFcDSValue() < Sensor || getEncoderDistance() > DSrange + EncoderRange) {
+            setPowers(0.0);
+        }
+        runWithoutEncoders();
+    }
+    }
 
     /**
      * Sleeps for the given amount of milliseconds, or until the thread is interrupted.
