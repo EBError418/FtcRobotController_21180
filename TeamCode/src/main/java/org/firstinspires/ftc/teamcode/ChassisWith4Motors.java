@@ -54,8 +54,9 @@ import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
  * Need config below hardware names:
  * 1. IMU - imu
  * 2. Distance sensor - fcds
- * 3. Wheel motors - names from initial function parameters.
- * 4. color sensor (Rev Color Sensor V3) - cs
+ * 3. Distance sensor - rcds
+ * 4. Wheel motors - names from initial function parameters.
+ * 5. color sensor (Rev Color Sensor V3) - cs
  */
 public class ChassisWith4Motors {
     //private
@@ -105,6 +106,7 @@ public class ChassisWith4Motors {
 
     //sensors
     private DistanceSensor frontCenterDS = null;
+    private DistanceSensor rightCenterDS = null;
     private ColorSensor colorSensor = null;
 
 
@@ -178,6 +180,7 @@ public class ChassisWith4Motors {
 
         // Distance sensors
         frontCenterDS = hardwareMap.get(DistanceSensor.class, "fcds");
+        rightCenterDS = hardwareMap.get(DistanceSensor.class, "rcds");
         colorSensor = hardwareMap.get(ColorSensor.class, "cs");
 
     }
@@ -618,6 +621,7 @@ public class ChassisWith4Motors {
                     BackLeftDrive.getCurrentPosition(), BackRightDrive.getCurrentPosition());
         }
     }
+    //used in autonomous to go to a certain junction, the distance the robot will have to run is larger than EncoderRange
     public void runToJunction(double EncoderRange, double DSrange, double Sensor) {
         runUsingEncoders();
         double driveDirection = Math.copySign(1, EncoderRange);
@@ -632,17 +636,15 @@ public class ChassisWith4Motors {
         }
 
         // controlled by distance sensor
-        double currDS = getFcDSValue();
         Logging.log(" curEnrDis = %.2f, Curr Sensor dist = %.2f",
-                Math.abs(getEncoderDistance()), getFcDSValue());
-        while(getFcDSValue() > 20) {
-            drivingWithPID(-SHORT_DISTANCE_POWER * driveDirection, 0.0, 0.0, true);
+                Math.abs(getEncoderDistance()), getRcDsValue());
+        while (getRcDsValue() > Sensor && getEncoderDistance() < EncoderRange + DSrange ) {
+            drivingWithPID(-SHORT_DISTANCE_POWER / 2 * driveDirection, 0.0, 0.0, true);
+            Logging.log("getRcDsValue = %.2f", getRcDsValue());
         }
-        while(getFcDSValue() < Sensor || getEncoderDistance() > DSrange + EncoderRange) {
-            setPowers(0.0);
-        }
+        Logging.log("getRcDsValue = %.2f", getRcDsValue());
+        setPowers(0.0);
         runWithoutEncoders();
-    }
     }
 
     /**
@@ -725,6 +727,9 @@ public class ChassisWith4Motors {
      */
     public double getFcDSValue() {
         return frontCenterDS.getDistance(DistanceUnit.INCH);
+    }
+    public double getRcDsValue() {
+        return rightCenterDS.getDistance(DistanceUnit.INCH);
     }
 
     /**
