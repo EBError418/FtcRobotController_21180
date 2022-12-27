@@ -129,7 +129,7 @@ public class AutonomousV2Right extends AutonomousRight {
             chassis.runToPosition(-FieldParams.HIGH_JUNCTION_TO_CONE_STACK, true);
             Logging.log("Autonomous - Robot has arrived loading area.");
 
-            Logging.log("fcDistance sensor value before loading: %.2f ", chassis.getFcDSValue());
+            Logging.log("fcDistance sensor value before loading: %.2f ", chassis.getFcDsValue());
             // load cone
             autoLoadCone(FieldParams.coneStack5th - FieldParams.coneLoadStackGap * autoLoop);
 
