@@ -67,6 +67,8 @@ public class AutonomousTest extends AutonomousRight {
 
     @Override
     public void autonomousCore() {
+
         chassis.runToConestack(1, 36);
+
     }
 }
