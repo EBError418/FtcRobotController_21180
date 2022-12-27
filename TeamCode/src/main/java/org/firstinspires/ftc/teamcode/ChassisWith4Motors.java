@@ -107,6 +107,8 @@ public class ChassisWith4Motors {
     //sensors
     private DistanceSensor frontCenterDS = null;
     private DistanceSensor rightCenterDS = null;
+    private DistanceSensor frontRightDS = null;
+    private DistanceSensor frontLeftDS = null;
     private ColorSensor colorSensor = null;
 
 
@@ -181,6 +183,8 @@ public class ChassisWith4Motors {
         // Distance sensors
         frontCenterDS = hardwareMap.get(DistanceSensor.class, "fcds");
         rightCenterDS = hardwareMap.get(DistanceSensor.class, "rcds");
+        frontLeftDS = hardwareMap.get(DistanceSensor.class, "flds");
+        frontRightDS = hardwareMap.get(DistanceSensor.class, "frds");
         colorSensor = hardwareMap.get(ColorSensor.class, "cs");
 
     }
@@ -646,6 +650,44 @@ public class ChassisWith4Motors {
         setPowers(0.0);
         runWithoutEncoders();
     }
+    public void runToConestack(double DistanceSensor) {
+        runUsingEncoders();
+        double driveDirection = Math.copySign(1, DriveRange);
+
+        float blue = (float)colorSensor.blue();
+        float red = (float)colorSensor.red();
+
+        DriveRange = Math.abs(DriveRange);
+        double currEnDist = 0.0;
+
+        // controlled by encoders
+        while(blue < 200 && red < 200) {
+            drivingWithPID(-SHORT_DISTANCE_POWER * driveDirection, 0.0, 0.0, true);
+        }
+
+        while (getFcDsValue() > DistanceSensor && (getFrDsValue() + getFlDsValue()) / 2 > DistanceSensor) {
+            drivingWithPID(-SHORT_DISTANCE_POWER / 2 * driveDirection, 0.0, 0.0, true);
+            Logging.log("getFcDsValue = %.2f", getFcDsValue());
+        }
+        Logging.log("getFrDsValue = %2f, getFlDsValue = %2f, getFcDsValue = %2f", getFrDsValue(), getFlDsValue(), getFcDsValue());
+        setPowers(-SHORT_DISTANCE_POWER);
+        if (getFcDsValue() < (getFrDsValue() + getFlDsValue()) / 2) {
+            return;
+        }
+        else {
+            if (getFlDsValue() < getFrDsValue()) {
+                runToPosition(-0.7, false);
+            }
+            else if (getFrDsValue() < getFlDsValue()) {
+                runToPosition(0.7, false);
+            }
+            else {
+                return;
+            }
+        }
+        setPowers(0.0);
+        runWithoutEncoders();
+    }
 
     /**
      * Sleeps for the given amount of milliseconds, or until the thread is interrupted.
@@ -725,8 +767,14 @@ public class ChassisWith4Motors {
      * Get the front center distance sensor value.
      * @return the value of front center distance, in inch
      */
-    public double getFcDSValue() {
+    public double getFcDsValue() {
         return frontCenterDS.getDistance(DistanceUnit.INCH);
+    }
+    public double getFlDsValue() {
+        return frontLeftDS.getDistance(DistanceUnit.INCH);
+    }
+    public double getFrDsValue() {
+        return frontRightDS.getDistance(DistanceUnit.INCH);
     }
     public double getRcDsValue() {
         return rightCenterDS.getDistance(DistanceUnit.INCH);
